@@ -29,6 +29,8 @@ public interface TestElement extends Cloneable {
 
     String ENABLED = "TestElement.enabled"; //$NON-NLS-1$
 
+    String SKIPPED = "TestElement.skipped"; //$NON-NLS-1$
+
     String TEST_CLASS = "TestElement.test_class"; //$NON-NLS-1$
 
     // Needed by AbstractTestElement.
@@ -72,6 +74,28 @@ public interface TestElement extends Cloneable {
      * @param enabled the status to set
      */
     void setEnabled(boolean enabled);
+
+
+    /**
+     * Check if SKIPPED property is present and true ; defaults to false if empty.
+     *
+     * @return true if element is skipped
+     */
+    boolean isSkipped();
+
+    /**
+     * get SKIPPED property is present and true ; defaults to true
+     *
+     * @return skipped Property.
+     */
+    String getSkipped();
+
+    /**
+     * Set the skipped status of the test element
+     *
+     * @param skipped the status to set
+     */
+    void setSkipped(String skipped);
 
     /**
      * Returns true or false whether the element is the running version.

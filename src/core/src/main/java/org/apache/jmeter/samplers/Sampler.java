@@ -19,20 +19,18 @@ package org.apache.jmeter.samplers;
 
 import java.io.Serializable;
 
+import org.apache.jmeter.testelement.Skippable;
 import org.apache.jmeter.testelement.TestElement;
 
 /**
- * Classes which are able to generate information about an entry should
- * implement this interface.
- *
+ * Classes which are able to generate information about an entry should implement this interface.
  */
-public interface Sampler extends Serializable, TestElement {
+public interface Sampler extends Serializable, TestElement, Skippable {
+
     /**
-     * Obtains statistics about the given Entry, and packages the information
-     * into a SampleResult.
+     * Obtains statistics about the given Entry, and packages the information into a SampleResult.
      *
-     * @param e
-     *            the Entry (TODO seems to be unused)
+     * @param e the Entry (TODO seems to be unused)
      * @return information about the sample
      */
     SampleResult sample(Entry e);

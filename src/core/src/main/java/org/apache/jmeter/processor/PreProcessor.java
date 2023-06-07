@@ -17,10 +17,12 @@
 
 package org.apache.jmeter.processor;
 
+import org.apache.jmeter.testelement.Skippable;
+
 /**
  * PreProcessors are executed just prior to a sample being run.
- *
  */
-public interface PreProcessor {
+public interface PreProcessor extends Skippable {
+
     void process();
 }

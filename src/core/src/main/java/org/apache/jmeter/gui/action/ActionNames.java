@@ -118,6 +118,8 @@ public final class ActionNames {
     public static final String ZOOM_OUT         = "zoom_out"; //$NON-NLS-1$
     public static final String PARSE_CURL       = "parse_curl"; //$NON-NLS-1$
     public static final String SCHEMATIC_VIEW   = "schematic_view"; //$NON-NLS-1$
+    public static final String ADVANCED_DISPLAY_ALL_SUB   = "advanced_display_all_sub"; //$NON-NLS-1$
+    public static final String ADVANCED_HIDE_ALL_SUB      = "advanced_hide_all_sub"; //$NON-NLS-1$
 
     // Prevent instantiation
     private ActionNames() {}

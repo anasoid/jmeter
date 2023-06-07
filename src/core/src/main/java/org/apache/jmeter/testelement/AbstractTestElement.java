@@ -24,12 +24,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.engine.util.NoThreadClone;
 import org.apache.jmeter.gui.Searchable;
 import org.apache.jmeter.testelement.property.BooleanProperty;
@@ -798,6 +800,33 @@ public abstract class AbstractTestElement implements TestElement, Serializable, 
     @Override
     public void setEnabled(boolean enabled) {
         setProperty(new BooleanProperty(TestElement.ENABLED, enabled));
+    }
+
+    @Override
+    public boolean isSkipped() {
+        String skipped = getSkipped();
+        if (StringUtils.isBlank(skipped)) {
+            return false;
+        }
+        skipped = skipped.toLowerCase(Locale.ROOT).trim();
+        if (skipped.equals("true")) {
+            return true;
+        } else if (skipped.equals("false")) {
+            return false;
+        } else {
+            log.error("Skip field on '{}' is not evaluated to true or false but to '{}', use false for default",getName(),skipped);
+            return false;
+        }
+    }
+
+    @Override
+    public void setSkipped(String disabled) {
+        setProperty(TestElement.SKIPPED, disabled);
+    }
+
+    @Override
+    public String getSkipped() {
+        return getPropertyAsString(TestElement.SKIPPED);
     }
 
     /**

@@ -438,9 +438,9 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         // for each thread group, generate threads
         // hand each thread the sampler controller
         // and the listeners, and the timer
-        Iterator<SetupThreadGroup> setupIter = setupSearcher.getSearchResults().iterator();
-        Iterator<AbstractThreadGroup> iter = searcher.getSearchResults().iterator();
-        Iterator<PostThreadGroup> postIter = postSearcher.getSearchResults().iterator();
+        Iterator<SetupThreadGroup> setupIter = setupSearcher.getSearchResults().stream().filter(c -> !c.isSkipped()).iterator();
+        Iterator<AbstractThreadGroup> iter = searcher.getSearchResults().stream().filter(c -> !c.isSkipped()).iterator();
+        Iterator<PostThreadGroup> postIter = postSearcher.getSearchResults().stream().filter(c -> !c.isSkipped()).iterator();
 
         ListenerNotifier notifier = new ListenerNotifier();
 

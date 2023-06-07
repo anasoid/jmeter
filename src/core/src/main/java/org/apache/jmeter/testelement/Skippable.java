@@ -15,18 +15,13 @@
  * limitations under the License.
  */
 
-package org.apache.jmeter.processor;
-
-import org.apache.jmeter.testelement.Skippable;
+package org.apache.jmeter.testelement;
 
 /**
- * The PostProcessor is activated after a sample result has been generated.
+ * Identify if testElement can be skipped or not, Even attributes are reset in Test Element same
+ * time logic  to be skipped should be implemented in testElement and using this interface will
+ * identify testElement that are implement it.
  */
-public interface PostProcessor extends Skippable {
+public interface Skippable {
 
-    /**
-     * Provides the PostProcessor with a SampleResult object from which to extract values for use in
-     * future Queries.
-     */
-    void process();
 }

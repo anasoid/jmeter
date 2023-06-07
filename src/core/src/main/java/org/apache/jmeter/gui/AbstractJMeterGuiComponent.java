@@ -17,6 +17,7 @@
 
 package org.apache.jmeter.gui;
 
+import static org.apache.jmeter.util.JMeterUtils.getResString;
 import static org.apache.jmeter.util.JMeterUtils.labelFor;
 import static org.apiguardian.api.API.Status.DEPRECATED;
 import static org.apiguardian.api.API.Status.EXPERIMENTAL;
@@ -24,9 +25,17 @@ import static org.apiguardian.api.API.Status.INTERNAL;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Enumeration;
 import java.util.Locale;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -34,13 +43,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.tree.TreeNode;
 
+import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.gui.util.VerticalPanel;
+import org.apache.jmeter.testelement.Skippable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.Printable;
 import org.apache.jorphan.gui.JFactory;
+import org.apache.jorphan.gui.layout.VerticalLayout;
 import org.apiguardian.api.API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,9 +97,31 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
     private final JTextArea commentField = JFactory.tabMovesFocus(new JTextArea());
 
     /**
-     * When constructing a new component, this takes care of basic tasks like
-     * setting up the Name Panel and assigning the class's static label as the
-     * name to start.
+     * skipped field.
+     */
+    private final JTextArea skippedField = JFactory.tabMovesFocus(new JTextArea());
+
+    /**
+     * skipped Panel.
+     */
+    private final JPanel skipPanel = new JPanel(new MigLayout("fillx, wrap 2, insets 0",
+        "[][fill,grow]"));
+
+    /**
+     * Advanced Panel.
+     */
+    private final JPanel advancedPanel = new JPanel();
+
+    private boolean advancedPanelVisible = true;
+
+    /**
+     * display advanced Panel.
+     */
+    private final JButton advancedButton = new JButton("");
+
+    /**
+     * When constructing a new component, this takes care of basic tasks like setting up the Name
+     * Panel and assigning the class's static label as the name to start.
      */
     protected AbstractJMeterGuiComponent() {
         namePanel = new NamePanel();
@@ -94,8 +129,8 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
     }
 
     /**
-     * Provides a default implementation for setting the name property. It's unlikely
-     * developers will need to override.
+     * Provides a default implementation for setting the name property. It's unlikely developers will
+     * need to override.
      */
     @Override
     public void setName(String name) {
@@ -113,9 +148,20 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         commentField.setText(comment);
     }
 
+
     /**
-     * Provides a default implementation for the enabled property. It's unlikely
-     * developers will need to override.
+     * Provides a default implementation for setting the comment property. It's unlikely developers
+     * will need to override.
+     *
+     * @param skipped The skipped for the property
+     */
+    public void setSkipped(String skipped) {
+        skippedField.setText(skipped);
+    }
+
+    /**
+     * Provides a default implementation for the enabled property. It's unlikely developers will need
+     * to override.
      */
     @Override
     public boolean isEnabled() {
@@ -123,8 +169,8 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
     }
 
     /**
-     * Provides a default implementation for the enabled property. It's unlikely
-     * developers will need to override.
+     * Provides a default implementation for the enabled property. It's unlikely developers will need
+     * to override.
      */
     @Override
     public void setEnabled(boolean enabled) {
@@ -158,13 +204,23 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
     }
 
     /**
-     * Provides the Name Panel for extending classes. Extending classes are free
-     * to place it as desired within the component, or not at all. Most
-     * components place the NamePanel automatically by calling
-     * {@link #makeTitlePanel()} instead of directly calling this method.
+     * Provides a default implementation for the skipped property. It's unlikely developers will need
+     * to override.
+     *
+     * @return The comment for the property
+     */
+    public String getSkipped() {
+        return skippedField.getText();
+    }
+
+    /**
+     * Provides the Name Panel for extending classes. Extending classes are free to place it as
+     * desired within the component, or not at all. Most components place the NamePanel automatically
+     * by calling {@link #makeTitlePanel()} instead of directly calling this method.
      *
      * @return a NamePanel containing the name of this component
-     * @deprecated use {@link #getName()} or {@link AbstractJMeterGuiComponent#createTitleLabel()} for better alignment of the fields
+     * @deprecated use {@link #getName()} or {@link AbstractJMeterGuiComponent#createTitleLabel()} for
+     * better alignment of the fields
      */
     @API(status = DEPRECATED, since = "5.2.0")
     @Deprecated
@@ -186,6 +242,42 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         return JFactory.big(new JLabel(getStaticLabel()));
     }
 
+
+    protected Component createAdvancedTitleLabel() {
+        JPanel pan = new JPanel(new GridBagLayout());
+
+        GridBagConstraints buttonConstraints = new GridBagConstraints();
+        buttonConstraints.gridx = 0;
+        buttonConstraints.gridy = 0;
+        buttonConstraints.insets = new java.awt.Insets(0, 0, 0, 5);
+
+        advancedButton.setFocusable(false);
+        advancedButton.setPreferredSize(new java.awt.Dimension(30, 20));
+
+        advancedButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        advancedButton.setFont(
+            advancedButton.getFont()
+                .deriveFont((float) advancedButton.getFont().getSize() - 4));
+        advancedButton.addMouseListener(new AdvancedDisplayAction());
+        advancedButton.setBackground(advancedButton.getBackground().darker());
+
+        pan.add(advancedButton, buttonConstraints);
+
+        JLabel titleLabel = new JLabel(getStaticLabel());
+        Font curFont = titleLabel.getFont();
+        titleLabel.setFont(curFont.deriveFont((float) curFont.getSize() + 4));
+
+        GridBagConstraints labelConstraints = new GridBagConstraints();
+        labelConstraints.weightx = 1.0;
+        labelConstraints.fill = GridBagConstraints.HORIZONTAL;
+        labelConstraints.gridx = 1;
+        labelConstraints.gridy = 0;
+
+        pan.add(titleLabel, labelConstraints);
+
+        return pan;
+    }
+
     /**
      * A newly created gui component can be initialized with the contents of a
      * Test Element object by calling this method. The component is responsible
@@ -205,6 +297,11 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         setName(element.getName());
         enabled = element.isEnabled();
         commentField.setText(element.getComment());
+        skippedField.setText(element.getSkipped());
+        if (!(element instanceof Skippable)) {
+            skipPanel.setVisible(false);
+        }
+        hideAdvancedPanelIfEmpty();
     }
 
     /**
@@ -222,6 +319,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
     private void initGui() {
         setName(getStaticLabel());
         commentField.setText("");
+        skippedField.setText("");
     }
 
     private void init() {
@@ -250,6 +348,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         log.debug("setting element to enabled: {}", enabled);
         mc.setEnabled(enabled);
         mc.setComment(getComment());
+        mc.setSkipped(getSkipped());
     }
 
     /**
@@ -262,7 +361,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      */
     protected Container makeTitlePanel() {
         JPanel titlePanel = new JPanel(new MigLayout("fillx, wrap 2, insets 0", "[][fill,grow]"));
-        titlePanel.add(createTitleLabel(), "span 2");
+        titlePanel.add(createAdvancedTitleLabel(), "span 2");
 
         JTextField nameField = namePanel.getNameField();
         titlePanel.add(labelFor(nameField, "name"));
@@ -272,13 +371,126 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         commentField.setWrapStyleWord(true);
         commentField.setLineWrap(true);
         titlePanel.add(commentField);
-
         // Note: VerticalPanel has a workaround for Box layout which aligns elements, so we can't
         // use trivial JPanel.
         // Extra wrapper is often required to ensure that further additions to the panel would be vertical
         // For instance AbstractVisualizer adds "browse file" panel
         // If it calls just ..add(browseFilePanel), then it will go to
-        return wrapTitlePanel(titlePanel);
+        Container wrap = wrapTitlePanel(titlePanel);
+        initAdvancedPanel();
+        wrap.add(advancedPanel);
+        if (isAdvancedDefault()) {
+            displayAdvancedPanel();
+        } else {
+            hideAdvancedPanel();
+        }
+        return wrap;
+    }
+
+
+    protected boolean isAdvancedDefault() {
+        return JMeterUtils.getPropDefault("jmeter.gui.advanced.display.default", true);
+    }
+
+    /**
+     * Initialize advanced Panel.
+     *
+     * @return advanced Panel, to be used only if override.
+     */
+    @API(status = EXPERIMENTAL, since = "5.5.0")
+    protected JPanel initAdvancedPanel() {
+
+        advancedPanel.setName("Advanced Panel");
+        advancedPanel.setBorder(BorderFactory.createTitledBorder(
+            getResString("advanced_panel_title"))); // $NON-NLS-1$
+        advancedPanel.setLayout(new VerticalLayout(5, VerticalLayout.BOTH));
+
+        advancedPanel.add(skipPanel);
+        skipPanel.setName("Skip Panel");
+        skipPanel.add(labelFor(skippedField, "skip_label"));
+        skipPanel.add(skippedField);
+        skippedField.setWrapStyleWord(true);
+        skippedField.setLineWrap(true);
+
+        return advancedPanel;
+
+    }
+
+    @API(status = EXPERIMENTAL, since = "5.5.0")
+    protected void displayAdvancedPanel() {
+
+        advancedPanelVisible = true;
+        advancedPanel.setVisible(hideAdvancedPanelIfEmpty());
+        advancedButton.setText("<<");
+        advancedButton.setToolTipText(getResString("advanced_hide"));
+
+    }
+
+    @API(status = EXPERIMENTAL, since = "5.5.0")
+    protected void hideAdvancedPanel() {
+        advancedPanelVisible = false;
+        advancedPanel.setVisible(false);
+        advancedButton.setText(">>");
+        advancedButton.setToolTipText(getResString("advanced_display"));
+
+
+    }
+
+    private boolean hideAdvancedPanelIfEmpty() {
+        boolean visible = false;
+        for (Component component : advancedPanel.getComponents()) {
+            if (component.isVisible()) {
+                visible = true;
+                break;
+            }
+        }
+        advancedPanel.setVisible(visible);
+        return visible;
+    }
+
+    private class AdvancedDisplayAction extends MouseAdapter {
+
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            int modifiers = e.getModifiersEx();
+            boolean shift = ((modifiers & InputEvent.SHIFT_DOWN_MASK)
+                == InputEvent.SHIFT_DOWN_MASK);
+            boolean ctrl = ((modifiers & InputEvent.CTRL_DOWN_MASK) == InputEvent.CTRL_DOWN_MASK);
+            boolean alt = ((modifiers & InputEvent.ALT_DOWN_MASK) == InputEvent.ALT_DOWN_MASK);
+
+            if (e.getClickCount() == 1) {
+                if (shift || ctrl || alt) {
+                    GuiPackage guiPackage = GuiPackage.getInstance();
+                    displayOrHide(guiPackage.getCurrentNode(), !advancedPanelVisible);
+
+                } else {
+                    if (advancedPanelVisible) {
+                        hideAdvancedPanel();
+                    } else {
+                        displayAdvancedPanel();
+                    }
+                }
+            }
+        }
+
+        private void displayOrHide(JMeterTreeNode node, boolean display) {
+            GuiPackage guiPackage = GuiPackage.getInstance();
+            JMeterGUIComponent gui = guiPackage.getGui(node.getTestElement());
+            if (gui instanceof AbstractJMeterGuiComponent) {
+                if (display) {
+                    ((AbstractJMeterGuiComponent) gui).displayAdvancedPanel();
+                } else {
+                    ((AbstractJMeterGuiComponent) gui).hideAdvancedPanel();
+                }
+            }
+
+            Enumeration<TreeNode> enumNode = node.children();
+            while (enumNode.hasMoreElements()) {
+                JMeterTreeNode child = (JMeterTreeNode) enumNode.nextElement();
+                displayOrHide(child, display);
+            }
+        }
     }
 
     @API(status = EXPERIMENTAL, since = "5.2.0")

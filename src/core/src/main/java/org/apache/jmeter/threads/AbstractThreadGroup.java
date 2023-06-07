@@ -30,6 +30,7 @@ import org.apache.jmeter.engine.TreeCloner;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
+import org.apache.jmeter.testelement.Skippable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.testelement.property.IntegerProperty;
@@ -41,11 +42,11 @@ import org.apiguardian.api.API;
 
 /**
  * ThreadGroup holds the settings for a JMeter thread group.
- *
+ * <p>
  * This class is intended to be ThreadSafe.
  */
 public abstract class AbstractThreadGroup extends AbstractTestElement
-    implements Serializable, Controller, JMeterThreadMonitor, TestCompilerHelper {
+    implements Serializable, Controller, JMeterThreadMonitor, TestCompilerHelper, Skippable {
 
     private static final long serialVersionUID = 240L;
 

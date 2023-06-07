@@ -18,15 +18,15 @@
 package org.apache.jmeter.assertions;
 
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.testelement.Skippable;
 
 /**
- * An Assertion checks a SampleResult to determine whether or not it is
- * successful. The resulting success status can be obtained from a corresponding
- * Assertion Result. For example, if a web response doesn't contain an expected
- * expression, it would be considered a failure.
- *
+ * An Assertion checks a SampleResult to determine whether or not it is successful. The resulting
+ * success status can be obtained from a corresponding Assertion Result. For example, if a web
+ * response doesn't contain an expected expression, it would be considered a failure.
  */
-public interface Assertion {
+public interface Assertion extends Skippable {
+
     /**
      * Returns the AssertionResult object encapsulating information about the
      * success or failure of the assertion.

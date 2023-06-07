@@ -17,13 +17,15 @@
 
 package org.apache.jmeter.samplers;
 
+import org.apache.jmeter.testelement.Skippable;
+
 /**
  * Allows notification on events occurring during the sampling process.
  * Specifically, when sampling is started, when a specific sample is obtained,
  * and when sampling is stopped.
  *
  */
-public interface SampleListener {
+public interface SampleListener extends Skippable {
     /**
      * A sample has started and stopped.
      *
