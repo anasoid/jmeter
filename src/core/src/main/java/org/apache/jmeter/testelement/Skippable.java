@@ -24,4 +24,6 @@ package org.apache.jmeter.testelement;
  */
 public interface Skippable {
 
+
+    boolean isSkipped();
 }

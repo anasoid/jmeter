@@ -28,7 +28,7 @@ import org.apache.jmeter.util.JMeterUtils;
  * Implementation of remote sampler listener, also supports TestStateListener
  */
 public class RemoteSampleListenerImpl extends java.rmi.server.UnicastRemoteObject
-    implements RemoteSampleListener, SampleListener, TestStateListener {
+        implements RemoteSampleListener, SampleListener, TestStateListener {
 
     private static final long serialVersionUID = 240L;
 
@@ -37,10 +37,10 @@ public class RemoteSampleListenerImpl extends java.rmi.server.UnicastRemoteObjec
     private final SampleListener sampleListener;
 
     private static final int DEFAULT_LOCAL_PORT = addOffset(
-        JMeterUtils.getPropDefault("client.rmi.localport", 0), 2); // $NON-NLS-1$
+            JMeterUtils.getPropDefault("client.rmi.localport", 0), 2); // $NON-NLS-1$
 
     public RemoteSampleListenerImpl(Object listener) throws RemoteException {
-        super(DEFAULT_LOCAL_PORT, RmiUtils.createClientSocketFactory(),  RmiUtils.createServerSocketFactory());
+        super(DEFAULT_LOCAL_PORT, RmiUtils.createClientSocketFactory(), RmiUtils.createServerSocketFactory());
         if (listener instanceof TestStateListener) {
             testListener = (TestStateListener) listener;
         } else {
@@ -93,8 +93,7 @@ public class RemoteSampleListenerImpl extends java.rmi.server.UnicastRemoteObjec
      * received locally. The function is to reduce network load when using
      * remote testing.
      *
-     * @param samples
-     *            the list of sample events to be fired locally
+     * @param samples the list of sample events to be fired locally
      */
     @Override
     public void processBatch(List<SampleEvent> samples) {
@@ -130,5 +129,13 @@ public class RemoteSampleListenerImpl extends java.rmi.server.UnicastRemoteObjec
         if (sampleListener != null) {
             sampleListener.sampleStopped(e);
         }
+    }
+
+    @Override
+    public boolean isSkipped() {
+        if (sampleListener != null) {
+            return sampleListener.isSkipped();
+        }
+        return false;
     }
 }

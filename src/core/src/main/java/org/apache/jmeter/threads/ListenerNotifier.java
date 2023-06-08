@@ -53,6 +53,9 @@ public class ListenerNotifier implements Serializable {
      */
     public void notifyListeners(SampleEvent res, List<SampleListener> listeners) {
         for (SampleListener sampleListener : listeners) {
+            if(sampleListener.isSkipped()){
+                continue;
+            }
             try {
                 TestBeanHelper.prepare((TestElement) sampleListener);
                 sampleListener.sampleOccurred(res);
