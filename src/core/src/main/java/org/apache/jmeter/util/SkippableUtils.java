@@ -15,23 +15,29 @@
  * limitations under the License.
  */
 
-package org.apache.jmeter.samplers;
-
-import java.io.Serializable;
+package org.apache.jmeter.util;
 
 import org.apache.jmeter.testelement.Skippable;
 import org.apache.jmeter.testelement.TestElement;
 
 /**
- * Classes which are able to generate information about an entry should implement this interface.
+ * Utils to check Skip element.
  */
-public interface Sampler extends Serializable, TestElement {
+public class SkippableUtils {
+
 
     /**
-     * Obtains statistics about the given Entry, and packages the information into a SampleResult.
+     * Check if testElement is Skippable.
      *
-     * @param e the Entry (TODO seems to be unused)
-     * @return information about the sample
+     * @param test
+     * @return
      */
-    SampleResult sample(Entry e);
+    public static boolean isSkipped(Skippable test) {
+        return test.isSkipped();
+    }
+
+    public static boolean isSkipped(Object test) {
+        return test instanceof Skippable && isSkipped((Skippable) test);
+
+    }
 }

@@ -25,5 +25,19 @@ package org.apache.jmeter.testelement;
 public interface Skippable {
 
 
-    boolean isSkipped();
+    /**
+     * Check if SKIPPED property is present and true ; defaults to false if empty.
+     *
+     * @return true if element is skipped
+     */
+    default boolean isSkipped() {
+        return false;
+    }
+
+    /**
+     * if element can be skipped. to display skipped field. it should be static value by type.
+     */
+    default boolean skippable() {
+        return true;
+    }
 }

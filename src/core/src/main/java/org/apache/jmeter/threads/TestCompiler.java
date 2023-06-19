@@ -38,8 +38,10 @@ import org.apache.jmeter.processor.PreProcessor;
 import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testbeans.TestBeanHelper;
+import org.apache.jmeter.testelement.Skippable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.timers.Timer;
+import org.apache.jmeter.util.SkippableUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
 import org.slf4j.Logger;
@@ -92,6 +94,7 @@ public class TestCompiler implements HashTreeTraverser {
 
     /**
      * Configures sampler from SamplePackage extracted from Test plan and returns it
+     *
      * @param sampler {@link Sampler}
      * @return {@link SamplePackage}
      */
@@ -104,6 +107,7 @@ public class TestCompiler implements HashTreeTraverser {
 
     /**
      * Configures Transaction Sampler from SamplePackage extracted from Test plan and returns it
+     *
      * @param transactionSampler {@link TransactionSampler}
      * @return {@link SamplePackage}
      */
@@ -116,19 +120,24 @@ public class TestCompiler implements HashTreeTraverser {
 
     /**
      * Reset pack to its initial state
+     *
      * @param pack the {@link SamplePackage} to reset
      */
     public void done(SamplePackage pack) {
         pack.recoverRunningVersion();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addNode(Object node, HashTree subTree) {
         stack.addLast((TestElement) node);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void subtractNode() {
         if (log.isDebugEnabled()) {
@@ -138,8 +147,7 @@ public class TestCompiler implements HashTreeTraverser {
         trackIterationListeners(stack);
         if (child instanceof Sampler) {
             saveSamplerConfigs((Sampler) child);
-        }
-        else if(child instanceof TransactionController) {
+        } else if (child instanceof TransactionController) {
             saveTransactionControllerConfigs((TransactionController) child);
         }
         stack.removeLast();
@@ -182,14 +190,18 @@ public class TestCompiler implements HashTreeTraverser {
                 }
                 if (item instanceof Controller) {
                     TestBeanHelper.prepare(child);
-                    ((Controller) item).addIterationListener((LoopIterationListener) child);
+                    if (!SkippableUtils.isSkipped(child)) {
+                        ((Controller) item).addIterationListener((LoopIterationListener) child);
+                    }
                     break;
                 }
             }
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void processPath() {
     }
@@ -204,7 +216,7 @@ public class TestCompiler implements HashTreeTraverser {
         List<PreProcessor> pres = new ArrayList<>();
         for (int i = stack.size(); i > 0; i--) {
             addDirectParentControllers(controllers, stack.get(i - 1));
-            List<PreProcessor>  tempPre = new ArrayList<>();
+            List<PreProcessor> tempPre = new ArrayList<>();
             List<PostProcessor> tempPost = new ArrayList<>();
             List<Assertion> tempAssertions = new ArrayList<>();
             for (Object item : testTree.list(stack.subList(0, i))) {
@@ -277,8 +289,7 @@ public class TestCompiler implements HashTreeTraverser {
         }
     }
 
-    private static class ObjectPair
-    {
+    private static class ObjectPair {
         private final TestElement child;
         private final TestElement parent;
 
@@ -287,13 +298,17 @@ public class TestCompiler implements HashTreeTraverser {
             this.parent = parent;
         }
 
-        /** {@inheritDoc} */
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public int hashCode() {
             return child.hashCode() + parent.hashCode();
         }
 
-        /** {@inheritDoc} */
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public boolean equals(Object o) {
             if (o instanceof ObjectPair) {
@@ -305,16 +320,17 @@ public class TestCompiler implements HashTreeTraverser {
 
     private static void configureWithConfigElements(Sampler sam, List<? extends ConfigTestElement> configs) {
         sam.clearTestElementChildren();
-        for (ConfigTestElement config  : configs) {
-            if (!(config instanceof NoConfigMerge))
-            {
-                if(sam instanceof ConfigMergabilityIndicator) {
-                    if(((ConfigMergabilityIndicator)sam).applies(config)) {
+        for (ConfigTestElement config : configs) {
+            if (!SkippableUtils.isSkipped(config)) {
+                if (!(config instanceof NoConfigMerge)) {
+                    if (sam instanceof ConfigMergabilityIndicator) {
+                        if (((ConfigMergabilityIndicator) sam).applies(config)) {
+                            sam.addTestElement(config);
+                        }
+                    } else {
+                        // Backward compatibility
                         sam.addTestElement(config);
                     }
-                } else {
-                    // Backward compatibility
-                    sam.addTestElement(config);
                 }
             }
         }

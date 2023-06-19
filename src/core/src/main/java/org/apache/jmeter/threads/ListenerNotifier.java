@@ -24,6 +24,7 @@ import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.testbeans.TestBeanHelper;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.util.SkippableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,7 @@ public class ListenerNotifier implements Serializable {
      */
     public void notifyListeners(SampleEvent res, List<SampleListener> listeners) {
         for (SampleListener sampleListener : listeners) {
-            if(sampleListener.isSkipped()){
+            if(SkippableUtils.isSkipped(sampleListener)){
                 continue;
             }
             try {

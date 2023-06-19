@@ -74,19 +74,23 @@ import net.miginfocom.swing.MigLayout;
  * @see org.apache.jmeter.timers.gui.AbstractTimerGui
  * @see org.apache.jmeter.visualizers.gui.AbstractVisualizer
  * @see org.apache.jmeter.samplers.gui.AbstractSamplerGui
- *
  */
 public abstract class AbstractJMeterGuiComponent extends JPanel implements JMeterGUIComponent, Printable {
     private static final long serialVersionUID = 241L;
 
-    /** Logging */
+    /**
+     * Logging
+     */
     private static final Logger log = LoggerFactory.getLogger(AbstractJMeterGuiComponent.class);
 
-    /** Flag indicating whether or not this component is enabled. */
+    /**
+     * Flag indicating whether or not this component is enabled.
+     */
     private boolean enabled = true;
 
     /**
-     *  A GUI panel containing the name of this component.
+     * A GUI panel containing the name of this component.
+     *
      * @deprecated use {@link #getName()} or {@link AbstractJMeterGuiComponent#createTitleLabel()} for better alignment of the fields
      **/
     @API(status = INTERNAL, since = "5.2.0")
@@ -105,7 +109,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * skipped Panel.
      */
     private final JPanel skipPanel = new JPanel(new MigLayout("fillx, wrap 2, insets 0",
-        "[][fill,grow]"));
+            "[][fill,grow]"));
 
     /**
      * Advanced Panel.
@@ -141,8 +145,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * Provides a default implementation for setting the comment property. It's
      * unlikely developers will need to override.
      *
-     * @param comment
-     *            The comment for the property
+     * @param comment The comment for the property
      */
     public void setComment(String comment) {
         commentField.setText(comment);
@@ -256,8 +259,8 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
 
         advancedButton.setMargin(new java.awt.Insets(0, 0, 0, 0));
         advancedButton.setFont(
-            advancedButton.getFont()
-                .deriveFont((float) advancedButton.getFont().getSize() - 4));
+                advancedButton.getFont()
+                        .deriveFont((float) advancedButton.getFont().getSize() - 4));
         advancedButton.addMouseListener(new AdvancedDisplayAction());
         advancedButton.setBackground(advancedButton.getBackground().darker());
 
@@ -289,8 +292,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * Subclasses should override this method, performing their own
      * configuration as needed, but also calling this super-implementation.
      *
-     * @param element
-     *            the TestElement to configure
+     * @param element the TestElement to configure
      */
     @Override
     public void configure(TestElement element) {
@@ -298,7 +300,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         enabled = element.isEnabled();
         commentField.setText(element.getComment());
         skippedField.setText(element.getSkipped());
-        if (!(element instanceof Skippable)) {
+        if (!element.skippable()) {
             skipPanel.setVisible(false);
         }
         hideAdvancedPanelIfEmpty();
@@ -334,8 +336,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * creating/modifying Test Elements, as that will best assure consistent
      * behavior.
      *
-     * @param mc
-     *            the TestElement being created.
+     * @param mc the TestElement being created.
      */
     protected void configureTestElement(TestElement mc) {
         mc.setName(getName());
@@ -402,7 +403,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
 
         advancedPanel.setName("Advanced Panel");
         advancedPanel.setBorder(BorderFactory.createTitledBorder(
-            getResString("advanced_panel_title"))); // $NON-NLS-1$
+                getResString("advanced_panel_title"))); // $NON-NLS-1$
         advancedPanel.setLayout(new VerticalLayout(5, VerticalLayout.BOTH));
 
         advancedPanel.add(skipPanel);
@@ -455,7 +456,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
         public void mouseClicked(MouseEvent e) {
             int modifiers = e.getModifiersEx();
             boolean shift = ((modifiers & InputEvent.SHIFT_DOWN_MASK)
-                == InputEvent.SHIFT_DOWN_MASK);
+                    == InputEvent.SHIFT_DOWN_MASK);
             boolean ctrl = ((modifiers & InputEvent.CTRL_DOWN_MASK) == InputEvent.CTRL_DOWN_MASK);
             boolean alt = ((modifiers & InputEvent.ALT_DOWN_MASK) == InputEvent.ALT_DOWN_MASK);
 
@@ -520,8 +521,7 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * TextAreas, tables, JLists, etc). It is here for convenience and to avoid
      * duplicate code. JMeter displays best if you follow this custom.
      *
-     * @param comp
-     *            the component which should be placed inside the scroll pane
+     * @param comp the component which should be placed inside the scroll pane
      * @return a JScrollPane containing the specified component
      */
     protected JScrollPane makeScrollPane(Component comp) {
@@ -538,15 +538,11 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
      * TextAreas, tables, JLists, etc). It is here for convenience and to avoid
      * duplicate code. JMeter displays best if you follow this custom.
      *
-     * @see javax.swing.ScrollPaneConstants
-     *
-     * @param comp
-     *            the component which should be placed inside the scroll pane
-     * @param verticalPolicy
-     *            the vertical scroll policy
-     * @param horizontalPolicy
-     *            the horizontal scroll policy
+     * @param comp             the component which should be placed inside the scroll pane
+     * @param verticalPolicy   the vertical scroll policy
+     * @param horizontalPolicy the horizontal scroll policy
      * @return a JScrollPane containing the specified component
+     * @see javax.swing.ScrollPaneConstants
      */
     protected JScrollPane makeScrollPane(Component comp, int verticalPolicy, int horizontalPolicy) {
         JScrollPane pane = new JScrollPane(comp, verticalPolicy, horizontalPolicy);
@@ -561,12 +557,13 @@ public abstract class AbstractJMeterGuiComponent extends JPanel implements JMete
 
     /**
      * Compute Anchor value to find reference in documentation for a particular component
+     *
      * @return String anchor
      */
     @Override
     public String getDocAnchor() {
         // Ensure we use default bundle
-        String label =  JMeterUtils.getResString(getLabelResource(), new Locale("",""));
+        String label = JMeterUtils.getResString(getLabelResource(), new Locale("", ""));
         return label.replace(' ', '_');
     }
 

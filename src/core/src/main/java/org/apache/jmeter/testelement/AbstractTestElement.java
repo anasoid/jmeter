@@ -808,7 +808,7 @@ public abstract class AbstractTestElement implements TestElement, Serializable, 
         if (StringUtils.isBlank(skipped)) {
             return false;
         }
-        skipped = skipped.toLowerCase(Locale.ROOT).trim();
+        skipped = skipped.trim().toLowerCase(Locale.ROOT);
         if (skipped.equals("true")) {
             return true;
         } else if (skipped.equals("false")) {

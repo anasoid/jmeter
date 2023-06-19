@@ -27,6 +27,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestPlan;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jmeter.util.SkippableUtils;
 import org.apache.jmeter.visualizers.backend.Backend;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
@@ -35,14 +36,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Class to replace function and variable references in the test tree.
- *
  */
 public class PreCompiler implements HashTreeTraverser {
     private static final Logger log = LoggerFactory.getLogger(PreCompiler.class);
 
     private final ValueReplacer replacer;
 
-//   Used by both StandardJMeterEngine and ClientJMeterEngine.
+    //   Used by both StandardJMeterEngine and ClientJMeterEngine.
 //   In the latter case, only ResultCollectors are updated,
 //   as only these are relevant to the client, and updating
 //   other elements causes all sorts of problems.
@@ -60,51 +60,58 @@ public class PreCompiler implements HashTreeTraverser {
         isClientSide = remote;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addNode(Object node, HashTree subTree) {
-        if(isClientSide) {
-            if(node instanceof ResultCollector || node instanceof Backend) {
+        if (isClientSide) {
+            if (node instanceof ResultCollector || node instanceof Backend) {
                 try {
                     replacer.replaceValues((TestElement) node);
                 } catch (InvalidVariableException e) {
-                    log.error("invalid variables in node {}", ((TestElement)node).getName(), e);
+                    log.error("invalid variables in node {}", ((TestElement) node).getName(), e);
                 }
             }
 
             if (node instanceof TestPlan) {
-                this.clientSideVariables = createVars((TestPlan)node);
+                this.clientSideVariables = createVars((TestPlan) node);
             }
 
             if (node instanceof Arguments) {
-                // Don't store User Defined Variables in the context for client side
-                Map<String, String> args = createArgumentsMap((Arguments) node);
-                clientSideVariables.putAll(args);
+                if (!SkippableUtils.isSkipped(node)) {
+                    // Don't store User Defined Variables in the context for client side
+                    Map<String, String> args = createArgumentsMap((Arguments) node);
+                    clientSideVariables.putAll(args);
+                }
             }
 
         } else {
-            if(node instanceof TestElement) {
+            if (node instanceof TestElement) {
                 try {
                     replacer.replaceValues((TestElement) node);
                 } catch (InvalidVariableException e) {
-                    log.error("invalid variables in node {}", ((TestElement)node).getName(), e);
+                    log.error("invalid variables in node {}", ((TestElement) node).getName(), e);
                 }
             }
 
             if (node instanceof TestPlan) {
-                JMeterVariables vars = createVars((TestPlan)node);
+                JMeterVariables vars = createVars((TestPlan) node);
                 JMeterContextService.getContext().setVariables(vars);
             }
 
             if (node instanceof Arguments) {
-                Map<String, String> args = createArgumentsMap((Arguments) node);
-                JMeterContextService.getContext().getVariables().putAll(args);
+                if (!SkippableUtils.isSkipped(node)) {
+                    Map<String, String> args = createArgumentsMap((Arguments) node);
+                    JMeterContextService.getContext().getVariables().putAll(args);
+                }
             }
         }
     }
 
     /**
      * Create Map of Arguments
+     *
      * @param arguments {@link Arguments}
      * @return {@link Map}
      */
@@ -117,6 +124,7 @@ public class PreCompiler implements HashTreeTraverser {
 
     /**
      * Create variables for testPlan
+     *
      * @param testPlan {@link JMeterVariables}
      * @return {@link JMeterVariables}
      */
@@ -129,12 +137,16 @@ public class PreCompiler implements HashTreeTraverser {
         return vars;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void subtractNode() {
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void processPath() {
     }

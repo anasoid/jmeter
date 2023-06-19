@@ -50,6 +50,7 @@ import org.apache.jmeter.threads.PostThreadGroup;
 import org.apache.jmeter.threads.SetupThreadGroup;
 import org.apache.jmeter.threads.TestCompiler;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jmeter.util.SkippableUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.ListedHashTree;
 import org.apache.jorphan.collections.SearchByClass;
@@ -68,7 +69,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
 
     // Should we exit at end of the test? (only applies to server, because host is non-null)
     private static final boolean EXIT_AFTER_TEST =
-        JMeterUtils.getPropDefault("server.exitaftertest", false);  // $NON-NLS-1$
+            JMeterUtils.getPropDefault("server.exitaftertest", false);  // $NON-NLS-1$
 
     // Allow engine and threads to be stopped from outside a thread
     // e.g. from beanshell server
@@ -83,13 +84,19 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
      */
     private static final List<TestStateListener> testList = new ArrayList<>();
 
-    /** Whether to call System.exit(0) in exit after stopping RMI */
+    /**
+     * Whether to call System.exit(0) in exit after stopping RMI
+     */
     private static final boolean REMOTE_SYSTEM_EXIT = JMeterUtils.getPropDefault("jmeterengine.remote.system.exit", false);
 
-    /** Whether to call System.exit(1) if threads won't stop */
+    /**
+     * Whether to call System.exit(1) if threads won't stop
+     */
     private static final boolean SYSTEM_EXIT_ON_STOP_FAIL = JMeterUtils.getPropDefault("jmeterengine.stopfail.system.exit", true);
 
-    /** Whether to call System.exit(0) unconditionally at end of non-GUI test */
+    /**
+     * Whether to call System.exit(0) unconditionally at end of non-GUI test
+     */
     private static final boolean SYSTEM_EXIT_FORCED = JMeterUtils.getPropDefault("jmeterengine.force.system.exit", false);
 
     private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(0);
@@ -108,16 +115,24 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
 
     private volatile Future<?> runningTest;
 
-    /** Flag to show whether test is running. Set to false to stop creating more threads. */
+    /**
+     * Flag to show whether test is running. Set to false to stop creating more threads.
+     */
     private volatile boolean running = false;
 
-    /** Flag to show whether engine is active. Set to false at end of test. */
+    /**
+     * Flag to show whether engine is active. Set to false at end of test.
+     */
     private volatile boolean active = false;
 
-    /** Thread Groups run sequentially */
+    /**
+     * Thread Groups run sequentially
+     */
     private volatile boolean serialized = false;
 
-    /** tearDown Thread Groups run after shutdown of main threads */
+    /**
+     * tearDown Thread Groups run after shutdown of main threads
+     */
     private volatile boolean tearDownOnShutdown = false;
 
     private HashTree test;
@@ -136,8 +151,10 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         // Hack to allow external control
         initSingletonEngine(this);
     }
+
     /**
      * Set the shared engine
+     *
      * @param standardJMeterEngine
      */
     private static void initSingletonEngine(StandardJMeterEngine standardJMeterEngine) {
@@ -200,7 +217,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
 
     @Override
     public void runTest() throws JMeterEngineException {
-        if (host != null){
+        if (host != null) {
             Instant now = Instant.now();
             String nowAsString = formatLikeDate(now);
             System.out.println("Starting the test on host "  // NOSONAR Intentional
@@ -260,7 +277,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
                     tl.testEnded(host);
                 }
             } catch (Exception e) {
-                log.warn("Error encountered during shutdown of "+tl.toString(),e);
+                log.warn("Error encountered during shutdown of " + tl.toString(), e);
             }
         }
         if (host != null) {
@@ -269,12 +286,12 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
             String nowAsString = formatLikeDate(now);
             System.out.println("Finished the test on host "  // NOSONAR Intentional
                     + host + " @ " + nowAsString + " (" + now.toEpochMilli() + ')'
-                    +(EXIT_AFTER_TEST ? " - exit requested." : ""));
-            if (EXIT_AFTER_TEST){
+                    + (EXIT_AFTER_TEST ? " - exit requested." : ""));
+            if (EXIT_AFTER_TEST) {
                 exit();
             }
         }
-        active=false;
+        active = false;
     }
 
     @Override
@@ -334,7 +351,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         private boolean verifyThreadsStopped() {
             // ConcurrentHashMap does not need synch. here
             for (AbstractThreadGroup threadGroup : groups) {
-                if(!threadGroup.verifyThreadsStopped()) {
+                if (!threadGroup.verifyThreadsStopped()) {
                     return false;
                 }
             }
@@ -345,7 +362,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
          * @return total of active threads in all Thread Groups
          */
         private int countStillActiveThreads() {
-            int reminingThreads= 0;
+            int reminingThreads = 0;
             for (AbstractThreadGroup threadGroup : groups) {
                 reminingThreads += threadGroup.numberOfActiveThreads();
             }
@@ -404,7 +421,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
             PreCompiler compiler = new PreCompiler();
             test.traverse(compiler);
         } catch (RuntimeException e) {
-            log.error("Error occurred compiling the tree:",e);
+            log.error("Error occurred compiling the tree:", e);
             JMeterUtils.reportErrorToUser("Error occurred compiling the tree: - see log file", e);
             return; // no point continuing
         }
@@ -438,9 +455,9 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         // for each thread group, generate threads
         // hand each thread the sampler controller
         // and the listeners, and the timer
-        Iterator<SetupThreadGroup> setupIter = setupSearcher.getSearchResults().stream().filter(c -> !c.isSkipped()).iterator();
-        Iterator<AbstractThreadGroup> iter = searcher.getSearchResults().stream().filter(c -> !c.isSkipped()).iterator();
-        Iterator<PostThreadGroup> postIter = postSearcher.getSearchResults().stream().filter(c -> !c.isSkipped()).iterator();
+        Iterator<SetupThreadGroup> setupIter = setupSearcher.getSearchResults().stream().filter(c -> !SkippableUtils.isSkipped(c)).iterator();
+        Iterator<AbstractThreadGroup> iter = searcher.getSearchResults().stream().filter(c -> !SkippableUtils.isSkipped(c)).iterator();
+        Iterator<PostThreadGroup> postIter = postSearcher.getSearchResults().stream().filter(c -> !SkippableUtils.isSkipped(c)).iterator();
 
         ListenerNotifier notifier = new ListenerNotifier();
 
@@ -465,7 +482,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
             //wait for all Setup Threads To Exit
             waitThreadsStopped();
             log.info("All Setup Threads have ended");
-            groupCount=0;
+            groupCount = 0;
             JMeterContextService.clearTotalThreads();
         }
 
@@ -497,7 +514,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
                 group.waitThreadsStopped();
             }
         } // end of thread groups
-        if (groupCount == 0){ // No TGs found
+        if (groupCount == 0) { // No TGs found
             log.info("No enabled thread groups found");
         } else {
             if (running) {
@@ -511,7 +528,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         waitThreadsStopped();
         groups.clear(); // The groups have all completed now
 
-        if (postIter.hasNext()){
+        if (postIter.hasNext()) {
             groupCount = 0;
             JMeterContextService.clearTotalThreads();
             log.info("Starting tearDown thread groups");
@@ -540,8 +557,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         }
     }
 
-    private void startThreadGroup(AbstractThreadGroup group, int groupCount, SearchByClass<?> searcher, List<?> testLevelElements, ListenerNotifier notifier)
-    {
+    private void startThreadGroup(AbstractThreadGroup group, int groupCount, SearchByClass<?> searcher, List<?> testLevelElements, ListenerNotifier notifier) {
         try {
             int numThreads = group.getNumThreads();
             JMeterContextService.addTotalThreads(numThreads);
@@ -568,8 +584,8 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
             groups.add(group);
             group.start(groupCount, notifier, threadGroupTree, this);
         } catch (JMeterStopTestException ex) { // NOSONAR Reported by log
-            JMeterUtils.reportErrorToUser("Error occurred starting thread group :" + group.getName()+ ", error message:"+ex.getMessage()
-                +", \r\nsee log file for more details", ex);
+            JMeterUtils.reportErrorToUser("Error occurred starting thread group :" + group.getName() + ", error message:" + ex.getMessage()
+                    + ", \r\nsee log file for more details", ex);
             return; // no point continuing
         }
     }
@@ -610,13 +626,13 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
             EXECUTOR_SERVICE.submit(() -> {
                 pause(1000); // Allow RMI to complete
                 log.info("Bye from {}", host);
-                System.out.println("Bye from "+host); // NOSONAR Intentional
+                System.out.println("Bye from " + host); // NOSONAR Intentional
                 System.exit(0); // NOSONAR Intentional
             });
         }
     }
 
-    private static void pause(long ms){
+    private static void pause(long ms) {
         try {
             TimeUnit.MILLISECONDS.sleep(ms);
         } catch (InterruptedException e) {

@@ -22,7 +22,7 @@ import org.apache.jmeter.testelement.property.NullProperty;
 import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.threads.JMeterContext;
 
-public interface TestElement extends Cloneable {
+public interface TestElement extends Skippable, Cloneable {
     String NAME = "TestElement.name"; //$NON-NLS-1$
 
     String GUI_CLASS = "TestElement.gui_class"; //$NON-NLS-1$
@@ -71,6 +71,7 @@ public interface TestElement extends Cloneable {
 
     /**
      * Set the enabled status of the test element
+     *
      * @param enabled the status to set
      */
     void setEnabled(boolean enabled);
@@ -81,6 +82,7 @@ public interface TestElement extends Cloneable {
      *
      * @return true if element is skipped
      */
+    @Override
     boolean isSkipped();
 
     /**
@@ -108,8 +110,7 @@ public interface TestElement extends Cloneable {
      * Test whether a given property is only a temporary resident of the
      * TestElement
      *
-     * @param property
-     *            the property to be tested
+     * @param property the property to be tested
      * @return <code>true</code> if property is temporary
      */
     boolean isTemporary(JMeterProperty property);
@@ -118,16 +119,14 @@ public interface TestElement extends Cloneable {
      * Indicate that the given property should be only a temporary property in
      * the TestElement
      *
-     * @param property
-     *            void
+     * @param property void
      */
     void setTemporary(JMeterProperty property);
 
     /**
      * Return a property as a boolean value.
      *
-     * @param key
-     *            the name of the property to get
+     * @param key the name of the property to get
      * @return the value of the property
      */
     boolean getPropertyAsBoolean(String key);
@@ -136,20 +135,17 @@ public interface TestElement extends Cloneable {
      * Return a property as a boolean value or a default value if no property
      * could be found.
      *
-     * @param key
-     *            the name of the property to get
-     * @param defaultValue
-     *            the default value to use
+     * @param key          the name of the property to get
+     * @param defaultValue the default value to use
      * @return the value of the property, or <code>defaultValue</code> if no
-     *         property could be found
+     * property could be found
      */
     boolean getPropertyAsBoolean(String key, boolean defaultValue);
 
     /**
      * Return a property as a long value.
      *
-     * @param key
-     *            the name of the property to get
+     * @param key the name of the property to get
      * @return the value of the property
      */
     long getPropertyAsLong(String key);
@@ -158,20 +154,17 @@ public interface TestElement extends Cloneable {
      * Return a property as a long value or a default value if no property
      * could be found.
      *
-     * @param key
-     *            the name of the property to get
-     * @param defaultValue
-     *            the default value to use
+     * @param key          the name of the property to get
+     * @param defaultValue the default value to use
      * @return the value of the property, or <code>defaultValue</code> if no
-     *         property could be found
+     * property could be found
      */
     long getPropertyAsLong(String key, long defaultValue);
 
     /**
      * Return a property as an int value.
      *
-     * @param key
-     *            the name of the property to get
+     * @param key the name of the property to get
      * @return the value of the property
      */
     int getPropertyAsInt(String key);
@@ -180,20 +173,17 @@ public interface TestElement extends Cloneable {
      * Return a property as an int value or a default value if no property
      * could be found.
      *
-     * @param key
-     *            the name of the property to get
-     * @param defaultValue
-     *            the default value to use
+     * @param key          the name of the property to get
+     * @param defaultValue the default value to use
      * @return the value of the property, or <code>defaultValue</code> if no
-     *         property could be found
+     * property could be found
      */
     int getPropertyAsInt(String key, int defaultValue);
 
     /**
      * Return a property as a float value.
      *
-     * @param key
-     *            the name of the property to get
+     * @param key the name of the property to get
      * @return the value of the property
      */
     float getPropertyAsFloat(String key);
@@ -201,8 +191,7 @@ public interface TestElement extends Cloneable {
     /**
      * Return a property as a double value.
      *
-     * @param key
-     *            the name of the property to get
+     * @param key the name of the property to get
      * @return the value of the property
      */
     double getPropertyAsDouble(String key);
@@ -215,8 +204,7 @@ public interface TestElement extends Cloneable {
      * and the element can be modified, but the state of the element at the time
      * of the call to setRunningVersion() must be recoverable.
      *
-     * @param run
-     *            flag whether this element should be the running version
+     * @param run flag whether this element should be the running version
      */
     void setRunningVersion(boolean run);
 
@@ -234,8 +222,7 @@ public interface TestElement extends Cloneable {
     /**
      * Return a property as a string value.
      *
-     * @param key
-     *            the name of the property to get
+     * @param key the name of the property to get
      * @return the value of the property
      */
     String getPropertyAsString(String key);
@@ -244,12 +231,10 @@ public interface TestElement extends Cloneable {
      * Return a property as an string value or a default value if no property
      * could be found.
      *
-     * @param key
-     *            the name of the property to get
-     * @param defaultValue
-     *            the default value to use
+     * @param key          the name of the property to get
+     * @param defaultValue the default value to use
      * @return the value of the property, or <code>defaultValue</code> if no
-     *         property could be found
+     * property could be found
      */
     String getPropertyAsString(String key, String defaultValue);
 
@@ -257,8 +242,7 @@ public interface TestElement extends Cloneable {
      * Sets and overwrites a property in the TestElement. This call will be
      * ignored if the TestElement is currently a "running version".
      *
-     * @param property
-     *            the property to be set
+     * @param property the property to be set
      */
     void setProperty(JMeterProperty property);
 
@@ -266,10 +250,9 @@ public interface TestElement extends Cloneable {
      * Given the name of the property, returns the appropriate property from
      * JMeter. If it is null, a NullProperty object will be returned.
      *
-     * @param propName
-     *            the name of the property to get
+     * @param propName the name of the property to get
      * @return {@link JMeterProperty} stored under the name, or
-     *         {@link NullProperty} if no property can be found
+     * {@link NullProperty} if no property can be found
      */
     JMeterProperty getProperty(String propName);
 
@@ -283,8 +266,7 @@ public interface TestElement extends Cloneable {
     /**
      * Remove property stored under the <code>key</code>
      *
-     * @param key
-     *            name of the property to be removed
+     * @param key name of the property to be removed
      */
     void removeProperty(String key);
 
@@ -295,8 +277,7 @@ public interface TestElement extends Cloneable {
     /**
      * Convenient way to traverse a test element.
      *
-     * @param traverser
-     *            The traverser that is notified of the contained elements
+     * @param traverser The traverser that is notified of the contained elements
      */
     void traverse(TestElementTraverser traverser);
 
@@ -306,19 +287,20 @@ public interface TestElement extends Cloneable {
     JMeterContext getThreadContext();
 
     /**
-     * @param threadContext
-     *            The threadContext to set.
+     * @param threadContext The threadContext to set.
      */
     void setThreadContext(JMeterContext threadContext);
 
     /**
      * Returns the threadName.
+     *
      * @return the threadName.
      */
     String getThreadName();
 
     /**
      * Configures thread name.
+     *
      * @param threadName the threadName to set.
      */
     void setThreadName(String threadName);
@@ -334,19 +316,21 @@ public interface TestElement extends Cloneable {
 
     /**
      * Get the name of this test element
+     *
      * @return name of this element
      */
     String getName();
 
     /**
      * Associates a name with this element.
-     * @param name
-     *            to be associated
+     *
+     * @param name to be associated
      */
     void setName(String name);
 
     /**
      * Returns comment associated with this element.
+     *
      * @return comment associated with this element
      */
     String getComment();
@@ -354,8 +338,7 @@ public interface TestElement extends Cloneable {
     /**
      * Associates a comment with this element
      *
-     * @param comment
-     *            to be associated
+     * @param comment to be associated
      */
     void setComment(String comment);
 

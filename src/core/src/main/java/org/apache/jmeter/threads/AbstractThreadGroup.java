@@ -46,7 +46,7 @@ import org.apiguardian.api.API;
  * This class is intended to be ThreadSafe.
  */
 public abstract class AbstractThreadGroup extends AbstractTestElement
-    implements Serializable, Controller, JMeterThreadMonitor, TestCompilerHelper, Skippable {
+        implements Serializable, Controller, JMeterThreadMonitor, TestCompilerHelper {
 
     private static final long serialVersionUID = 240L;
 
@@ -59,42 +59,62 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
             Duration.ofMillis(
                     JMeterUtils.getPropDefault("jmeterengine.threadstop.wait", 5 * 1000L));
 
-    /** Action to be taken when a Sampler error occurs */
+    /**
+     * Action to be taken when a Sampler error occurs
+     */
     public static final String ON_SAMPLE_ERROR = "ThreadGroup.on_sample_error"; // int
 
-    /** Continue, i.e. ignore sampler errors */
+    /**
+     * Continue, i.e. ignore sampler errors
+     */
     public static final String ON_SAMPLE_ERROR_CONTINUE = "continue";
 
-    /** Start next loop for current thread if sampler error occurs */
+    /**
+     * Start next loop for current thread if sampler error occurs
+     */
     public static final String ON_SAMPLE_ERROR_START_NEXT_LOOP = "startnextloop";
 
-    /** Stop current thread if sampler error occurs */
+    /**
+     * Stop current thread if sampler error occurs
+     */
     public static final String ON_SAMPLE_ERROR_STOPTHREAD = "stopthread";
 
-    /** Stop test (all threads) if sampler error occurs, the entire test is stopped at the end of any current samples */
+    /**
+     * Stop test (all threads) if sampler error occurs, the entire test is stopped at the end of any current samples
+     */
     public static final String ON_SAMPLE_ERROR_STOPTEST = "stoptest";
 
-    /** Stop test NOW (all threads) if sampler error occurs, the entire test is stopped abruptly. Any current samplers are interrupted if possible. */
+    /**
+     * Stop test NOW (all threads) if sampler error occurs, the entire test is stopped abruptly. Any current samplers are interrupted if possible.
+     */
     public static final String ON_SAMPLE_ERROR_STOPTEST_NOW = "stoptestnow";
 
-    /** Number of threads in the thread group */
+    /**
+     * Number of threads in the thread group
+     */
     public static final String NUM_THREADS = "ThreadGroup.num_threads";
 
     public static final String MAIN_CONTROLLER = "ThreadGroup.main_controller";
 
-    /** The same user or different users */
+    /**
+     * The same user or different users
+     */
     public static final String IS_SAME_USER_ON_NEXT_ITERATION = "ThreadGroup.same_user_on_next_iteration";
 
 
     private final AtomicInteger numberOfThreads = new AtomicInteger(0); // Number of active threads in this group
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isDone() {
         return getSamplerController().isDone();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Sampler next() {
         return getSamplerController().next();
@@ -112,8 +132,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
     /**
      * Set the sampler controller.
      *
-     * @param c
-     *            the sampler controller.
+     * @param c the sampler controller.
      */
     public void setSamplerController(LoopController c) {
         c.setContinueForever(false);
@@ -123,8 +142,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
     /**
      * Add a test element.
      *
-     * @param child
-     *            the test element to add.
+     * @param child the test element to add.
      */
     @Override
     public void addTestElement(TestElement child) {
@@ -135,7 +153,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
      * {@inheritDoc}
      */
     @Override
-    public final boolean addTestElementOnce(TestElement child){
+    public final boolean addTestElementOnce(TestElement child) {
         synchronized (children) {
             if (children.putIfAbsent(child, DUMMY) == null) {
                 addTestElement(child);
@@ -145,19 +163,25 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
         return false;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addIterationListener(LoopIterationListener lis) {
         getSamplerController().addIterationListener(lis);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void removeIterationListener(LoopIterationListener iterationListener) {
         getSamplerController().removeIterationListener(iterationListener);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void initialize() {
         Controller c = getSamplerController();
@@ -171,7 +195,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
      * Start next iteration after an error
      */
     public void startNextLoop() {
-       ((IteratingController) getSamplerController()).startNextLoop();
+        ((IteratingController) getSamplerController()).startNextLoop();
     }
 
     /**
@@ -185,8 +209,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
     /**
      * Set the total number of threads to start
      *
-     * @param numThreads
-     *            the number of threads.
+     * @param numThreads the number of threads.
      */
     public void setNumThreads(int numThreads) {
         setProperty(new IntegerProperty(NUM_THREADS, numThreads));
@@ -262,8 +285,9 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
 
     /**
      * Hard or graceful stop depending on now flag
+     *
      * @param threadName String thread name
-     * @param now if true interrupt {@link Thread}
+     * @param now        if true interrupt {@link Thread}
      * @return boolean true if stop succeeded
      */
     public abstract boolean stopThread(String threadName, boolean now);
@@ -275,16 +299,18 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
 
     /**
      * Start the {@link ThreadGroup}
-     * @param groupCount group number
-     * @param notifier {@link ListenerNotifier}
+     *
+     * @param groupCount      group number
+     * @param notifier        {@link ListenerNotifier}
      * @param threadGroupTree {@link ListedHashTree}
-     * @param engine {@link StandardJMeterEngine}
+     * @param engine          {@link StandardJMeterEngine}
      */
     public abstract void start(int groupCount, ListenerNotifier notifier, ListedHashTree threadGroupTree, StandardJMeterEngine engine);
 
     /**
      * Add a new {@link JMeterThread} to this {@link ThreadGroup} for engine
-     * @param delay Delay in milliseconds
+     *
+     * @param delay  Delay in milliseconds
      * @param engine {@link StandardJMeterEngine}
      * @return {@link JMeterThread}
      */
@@ -318,9 +344,8 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
     /**
      * Set the kind of user
      *
-     * @param isSameUserOnNextIteration
-     *            true is the same user on next iteration of loop
-     *            false is a different user on next iteration of loop
+     * @param isSameUserOnNextIteration true is the same user on next iteration of loop
+     *                                  false is a different user on next iteration of loop
      */
     public void setIsSameUserOnNextIteration(boolean isSameUserOnNextIteration) {
         setProperty(new BooleanProperty(IS_SAME_USER_ON_NEXT_ITERATION, isSameUserOnNextIteration));
@@ -332,6 +357,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
      *  <li>true means same user running multiple iterations</li>
      *  <li>false means a different user for each iteration</li>
      * </ul>
+     *
      * @return the kind of user.
      */
     public boolean isSameUserOnNextIteration() {
@@ -340,13 +366,14 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
 
     /**
      * Create {@link JMeterThread}. Note: the input tree is not cloned.
-     * @param engine {@link StandardJMeterEngine}
-     * @param monitor {@link JMeterThreadMonitor}
-     * @param notifier {@link ListenerNotifier}
-     * @param groupNumber  thread group number
-     * @param threadNumber int thread number
+     *
+     * @param engine          {@link StandardJMeterEngine}
+     * @param monitor         {@link JMeterThreadMonitor}
+     * @param notifier        {@link ListenerNotifier}
+     * @param groupNumber     thread group number
+     * @param threadNumber    int thread number
      * @param threadGroupTree {@link ListedHashTree}
-     * @param variables initial variables
+     * @param variables       initial variables
      * @return {@link JMeterThread}
      */
     @API(status = API.Status.EXPERIMENTAL, since = "5.5")
@@ -367,7 +394,7 @@ public abstract class AbstractThreadGroup extends AbstractTestElement
         jmeterThread.putVariables(variables);
         String distributedPrefix =
                 JMeterUtils.getPropDefault(JMeterUtils.THREAD_GROUP_DISTRIBUTED_PREFIX_PROPERTY_NAME, "");
-        final String threadName = distributedPrefix + (distributedPrefix.isEmpty() ? "":"-") +groupName + " " + groupNumber + "-" + (threadNumber + 1);
+        final String threadName = distributedPrefix + (distributedPrefix.isEmpty() ? "" : "-") + groupName + " " + groupNumber + "-" + (threadNumber + 1);
         jmeterThread.setThreadName(threadName);
         jmeterThread.setEngine(engine);
         jmeterThread.setOnErrorStopTest(onErrorStopTest);

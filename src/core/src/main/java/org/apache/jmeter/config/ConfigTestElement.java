@@ -20,11 +20,9 @@ package org.apache.jmeter.config;
 import java.io.Serializable;
 
 import org.apache.jmeter.testelement.AbstractTestElement;
-import org.apache.jmeter.testelement.Skippable;
 import org.apache.jmeter.testelement.TestElement;
 
-public class ConfigTestElement extends AbstractTestElement implements Serializable, ConfigElement,
-    Skippable {
+public class ConfigTestElement extends AbstractTestElement implements Serializable, ConfigElement {
 
     private static final long serialVersionUID = 240L;
 

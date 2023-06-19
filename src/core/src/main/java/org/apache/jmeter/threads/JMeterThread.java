@@ -51,6 +51,7 @@ import org.apache.jmeter.threads.JMeterContext.TestLogicalAction;
 import org.apache.jmeter.timers.Timer;
 import org.apache.jmeter.timers.TimerService;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jmeter.util.SkippableUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
 import org.apache.jorphan.collections.ListedHashTree;
@@ -267,7 +268,7 @@ public class JMeterThread implements Runnable, Interruptible {
             while (running) {
                 Sampler sam = threadGroupLoopController.next();
                 while (running && sam != null) {
-                    if (sam.isSkipped()) {
+                    if (SkippableUtils.isSkipped(sam)) {
                         sam = threadGroupLoopController.next();
                         continue;
                     }
@@ -800,7 +801,7 @@ public class JMeterThread implements Runnable, Interruptible {
 
         @Override
         public void addNode(Object node, HashTree subTree) {
-            if (node instanceof ThreadListener) {
+            if (node instanceof ThreadListener && !SkippableUtils.isSkipped(node)) {
                 ThreadListener tl = (ThreadListener) node;
                 if (isStart) {
                     try {
@@ -908,7 +909,7 @@ public class JMeterThread implements Runnable, Interruptible {
 
     private static void checkAssertions(List<? extends Assertion> assertions, SampleResult parent, JMeterContext threadContext) {
         for (Assertion assertion : assertions) {
-            if (assertion.isSkipped()) {
+            if (SkippableUtils.isSkipped(assertion)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping assertion: {}", ((AbstractTestElement) assertion).getName());
                 }
@@ -982,7 +983,7 @@ public class JMeterThread implements Runnable, Interruptible {
 
     private static void runPostProcessors(List<? extends PostProcessor> extractors) {
         for (PostProcessor ex : extractors) {
-            if (ex.isSkipped()) {
+            if (SkippableUtils.isSkipped(ex)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping postProcessor: {}", ((AbstractTestElement) ex).getName());
                 }
@@ -995,7 +996,7 @@ public class JMeterThread implements Runnable, Interruptible {
 
     private static void runPreProcessors(List<? extends PreProcessor> preProcessors) {
         for (PreProcessor ex : preProcessors) {
-            if (ex.isSkipped()) {
+            if (SkippableUtils.isSkipped(ex)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping preprocessor: {}", ((AbstractTestElement) ex).getName());
                 }
@@ -1021,7 +1022,7 @@ public class JMeterThread implements Runnable, Interruptible {
     private void delay(List<? extends Timer> timers) {
         long totalDelay = 0;
         for (Timer timer : timers) {
-            if(timer.isSkipped()){
+            if (SkippableUtils.isSkipped(timer)) {
                 continue;
             }
             TestBeanHelper.prepare((TestElement) timer);
@@ -1058,9 +1059,11 @@ public class JMeterThread implements Runnable, Interruptible {
     void notifyTestListeners() {
         threadVars.incIteration();
         for (TestIterationListener listener : testIterationStartListeners) {
-            listener.testIterationStart(new LoopIterationEvent(threadGroupLoopController, threadVars.getIteration()));
-            if (listener instanceof TestElement) {
-                ((TestElement) listener).recoverRunningVersion();
+            if (SkippableUtils.isSkipped(listener)) {
+                listener.testIterationStart(new LoopIterationEvent(threadGroupLoopController, threadVars.getIteration()));
+                if (listener instanceof TestElement) {
+                    ((TestElement) listener).recoverRunningVersion();
+                }
             }
         }
     }
